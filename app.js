@@ -23,15 +23,8 @@ app.post('/submit', async (req, res) => {
     try {
       const htmlContent = await fetchHTMLContent(url);
       if (htmlContent) {
-        const { imageUrl, entryTitle, description, keywords } = extractDataFromHTML(htmlContent);
-        const imageName = await downloadImage(imageUrl);
-
-        if (imageName) {
-          const csvData = `\n"${entryTitle}","${description}",${category},"${keywords}",${imageName},,,,,no,In gedruckter Form,,Pixelgrafik,Rechte liegen beim Grafiker,${epoche},,,,,,`;
-          appendToCSV(csvData);
-
-          return res.send(`Data extracted and CSV updated successfully. ${entryTitle}`);
-        }
+        const message = extractDataFromHTMLCategory(htmlContent, category, epoche);
+        return res.send(message);
       }
     } catch (error) {
       console.error('Error processing the URL:', error);
@@ -48,6 +41,26 @@ async function fetchHTMLContent(url) {
   return response.data;
 }
 
+ function extractDataFromHTMLCategory(htmlContent, category, epoche) {
+  const { document } = new JSDOM(htmlContent).window;
+
+  const links = document.querySelectorAll('a.woocommerce-LoopProduct-link');
+  links.forEach( async (element) => {
+    const htmlContentProduct = await fetchHTMLContent(element.getAttribute('href'));
+    console.log(element.getAttribute('href'));
+      if (htmlContentProduct) {
+    
+    const { imageUrl, entryTitle, description, keywords } = extractDataFromHTML(htmlContentProduct);
+    const imageName = await downloadImage(imageUrl);
+
+    if (imageName) {
+      const csvData = `\n"${entryTitle}","${description}",${category},"${keywords}",${imageName},,,,,no,In gedruckter Form,,Pixelgrafik,Rechte liegen beim Grafiker,${epoche},,,,,,`;
+      appendToCSV(csvData);
+    }
+  }
+  });
+  return "Successful category";
+}
 // Function to extract the required information from the HTML content
 function extractDataFromHTML(htmlContent) {
   const { document } = new JSDOM(htmlContent).window;
@@ -59,7 +72,11 @@ function extractDataFromHTML(htmlContent) {
   }else{
      description = "Siehe Bild";
   }
-  const keywords = document.querySelector('span.tagged_as').textContent.trim().replace('Schlagwörter: ', '');
+  if (document.querySelector('span.tagged_as')){
+    keywords = document.querySelector('span.tagged_as').textContent.trim().replace('Schlagwörter: ', '');
+  }else{
+    keywords = "";
+  }
   return {
     imageUrl,
     entryTitle,
