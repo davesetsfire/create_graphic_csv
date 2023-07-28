@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extract HTML Information</title>
+</head>
+<body>
+    <form id="urlForm">
+        <label for="urlInput">Enter URL:</label>
+        <input type="text" id="urlInput" required><br>
+        <label for="epocheInput">Enter Epoche</label>
+        <input type="text" id="epocheInput" value="ab 2010" required><br>
+        <label for="categoryInput">Enter category</label>
+        <input type="text" id="categoryInput" value="Dokumente" required><br>
+        <label for="result">Result</label>
+        <input type="text" id="result" name="result" value="No result" readonly>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById('urlForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value;
+
+            const epocheInput = document.getElementById('epocheInput');
+            const epoche = epocheInput.value;
+
+            const categoryInput = document.getElementById('categoryInput');
+            const category = categoryInput.value;
+            
+            urlInput.value = '';
+            document.getElementById('result').value='';
+            if (url) {
+                // Send a POST request to the Node.js server
+                fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url, epoche: epoche, category: category}),
+                })
+                .then(response => response.text())
+                .then(message => document.getElementById('result').value=message)
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
+</body>
+</html>
