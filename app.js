@@ -48,14 +48,13 @@ async function fetchHTMLContent(url) {
   links.forEach( async (element) => {
     const htmlContentProduct = await fetchHTMLContent(element.getAttribute('href'));
     console.log(element.getAttribute('href'));
-      if (htmlContentProduct) {
     
-    const { imageUrl, entryTitle, description, keywords } = extractDataFromHTML(htmlContentProduct);
-    const imageName = await downloadImage(imageUrl);
-
+    if (htmlContentProduct) {
+      const { imageUrl, entryTitle, description, keywords } = extractDataFromHTML(htmlContentProduct);
+      const imageName = await downloadImage(imageUrl);
     if (imageName) {
-      const csvData = `\n"${entryTitle}","${description}",${category},"${keywords}",${imageName},,,,,no,In gedruckter Form,,Pixelgrafik,Rechte liegen beim Grafiker,${epoche},,,,,,`;
-      appendToCSV(csvData);
+      const csvData = `"${entryTitle}","${description}",${category},"${keywords}",${imageName},,,,,no,In gedruckter Form,,Pixelgrafik,Rechte liegen beim Grafiker,${epoche},,,,,,`;
+      appendToCSVWithCheck(csvData, entryTitle, description);
     }
   }
   });
@@ -137,8 +136,24 @@ async function resizeImage(imagePath, minWidth, minHeight, resizedImagePath) {
 }
 
 // Function to append data to the CSV file
-function appendToCSV(data) {
-  fs.appendFileSync('graphic.csv', data);
+function appendToCSV(data, csvFileName) {
+  fs.appendFileSync(csvFileName, data);
+}
+
+// Function to append data to the CSV file with a check for duplicates
+function appendToCSVWithCheck(data, entryTitle, description) {
+const isLineExisting = checkIfLineExists('master_graphic.csv', entryTitle, description);
+if (!isLineExisting) {
+  appendToCSV(`\n${data}`, 'master_graphic.csv');
+  appendToCSV(`\n${data}`, 'graphic.csv');
+}
+}
+
+// Function to check if a line already exists in the CSV file
+function checkIfLineExists(csvFileName, entryTitle, description) {
+  const fileContent = fs.readFileSync(csvFileName, 'utf-8');
+  return fileContent.includes(entryTitle) && fileContent.includes(description);
+
 }
 
 // Start the server
