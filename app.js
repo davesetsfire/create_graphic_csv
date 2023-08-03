@@ -50,7 +50,7 @@ async function fetchHTMLContent(url) {
  function extractDataFromHTMLsubLevelOne(htmlContent, mainCategory, subLevelOne, subLevelTwo, epoche, availability, format, rights, brand) {
   const { document } = new JSDOM(htmlContent).window;
 
-  const links = document.querySelectorAll('gallery-icon landscape');
+  const links = document.querySelectorAll('a.woocommerce-LoopProduct-link');
   links.forEach( async (element) => {
     const htmlContentProduct = await fetchHTMLContent(element.getAttribute('href'));
     console.log(element.getAttribute('href'));
