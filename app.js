@@ -16,14 +16,20 @@ app.get('/', (req, res) => {
 // Handle form submission
 app.post('/submit', async (req, res) => {
   const url = req.body.url;
+  const mainCategory = req.body.mainCategory;
   const epoche = req.body.epoche;
-  const category = req.body.category;
+  const subLevelOne = req.body.subLevelOne;
+  const subLevelTwo = req.body.subLevelTwo;
+  const availability = req.body.availability;
+  const format = req.body.format;
+  const rights = req.body.rights;
+  const brand = req.body.brand;
 
   if (url) {
     try {
       const htmlContent = await fetchHTMLContent(url);
       if (htmlContent) {
-        const message = extractDataFromHTMLCategory(htmlContent, category, epoche);
+        const message = extractDataFromHTMLsubLevelOne(htmlContent, mainCategory, subLevelOne, subLevelTwo, epoche, availability, format, rights, brand);
         return res.send(message);
       }
     } catch (error) {
@@ -41,24 +47,20 @@ async function fetchHTMLContent(url) {
   return response.data;
 }
 
- function extractDataFromHTMLCategory(htmlContent, category, epoche) {
+ function extractDataFromHTMLsubLevelOne(htmlContent, mainCategory, subLevelOne, subLevelTwo, epoche, availability, format, rights, brand) {
   const { document } = new JSDOM(htmlContent).window;
 
-  const links = document.querySelectorAll('a.woocommerce-LoopProduct-link');
+  const links = document.querySelectorAll('gallery-icon landscape');
   links.forEach( async (element) => {
     const htmlContentProduct = await fetchHTMLContent(element.getAttribute('href'));
     console.log(element.getAttribute('href'));
     
     if (htmlContentProduct) {
       const { imageUrl, entryTitle, description, keywords } = extractDataFromHTML(htmlContentProduct);
-      const imageName = await downloadImage(imageUrl);
-    if (imageName) {
-      const csvData = `"${entryTitle}","${description}",${category},"${keywords}",${imageName},,,,,no,In gedruckter Form,,Pixelgrafik,Rechte liegen beim Grafiker,${epoche},,,,,,`;
-      appendToCSVWithCheck(csvData, entryTitle, description);
-    }
+      appendToCSVWithCheck(entryTitle, mainCategory, description, imageUrl, subLevelOne, subLevelTwo, keywords, availability, rights, format, epoche);
   }
   });
-  return "Successful category";
+  return "Successful subLevelOne";
 }
 // Function to extract the required information from the HTML content
 function extractDataFromHTML(htmlContent) {
@@ -141,11 +143,50 @@ function appendToCSV(data, csvFileName) {
 }
 
 // Function to append data to the CSV file with a check for duplicates
-function appendToCSVWithCheck(data, entryTitle, description) {
-const isLineExisting = checkIfLineExists('master_graphic.csv', entryTitle, description);
+async function appendToCSVWithCheck(entryTitle, mainCategory, description, imageUrl, subLevelOne, subLevelTwo, keywords, availability, rights, format, epoche) {
+const isLineExisting = checkIfLineExists('csv_files/master.csv', entryTitle, description);
 if (!isLineExisting) {
-  appendToCSV(`\n${data}`, 'master_graphic.csv');
-  appendToCSV(`\n${data}`, 'graphic.csv');
+  const imageName = await downloadImage(imageUrl);
+    if (imageName) {
+      let csvData;
+      switch (mainCategory) { 
+        case 'graphics':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${keywords}","${imageName}",,,,,no,"${availability}",,"${format}","${rights}","${epoche}",,,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'graphic.csv');
+        break;
+        case 'construction':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${subLevelTwo},"${keywords}","${imageName}",,,,,no,,,,"${epoche}",,,,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv'); 
+          appendToCSV(`\n${csvData}`, 'csv_files/construction.csv');
+        break;
+        case 'furniture':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${subLevelTwo}","${keywords}","${imageName}",,,,,no,,,,"${epoche}",,,,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'csv_files/furniture.csv');
+        break;
+        case 'offScreen':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${keywords}","${imageName}",,,,,no,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'csv_files/offScreen.csv');
+        break;
+        case 'props':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${subLevelTwo},"${keywords}","${imageName}",,,,,no,,,,"${epoche}",,,,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'csv_files/props.csv');
+        break;
+        case 'service':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${keywords}","${imageName}",,,,,no`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'csv_files/service.csv');
+        break;
+        case 'vehicles':
+          csvData = `"${entryTitle}","${description}","${subLevelOne}","${subLevelTwo},"${keywords}","${imageName}",,,,,no,,,,"${brand}",,"${epoche}",,,,,,`;
+          appendToCSV(`\n${csvData}`, 'csv_files/master.csv');
+          appendToCSV(`\n${csvData}`, 'csv_files/vehicles.csv');
+        break;
+      }
+}
 }
 }
 

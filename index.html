@@ -2,33 +2,131 @@
 <html>
 <head>
     <title>Extract HTML Information</title>
-</head>
+   </head>
 <body>
     <form id="urlForm">
-        <label for="urlInput">Enter URL:</label>
-        <input type="text" id="urlInput" required><br>
-        <label for="epocheInput">Enter Epoche</label>
-        <input type="text" id="epocheInput" value="ab 2010" required><br>
-        <label for="categoryInput">Enter category</label>
-        <input type="text" id="categoryInput" value="Dokumente" required><br>
+        <label for="mainCategorySelect">Select Main Category</label>
+        <select id="mainCategorySelect">
+            <option value="furniture">Furniture</option>
+            <option value="props">Props</option>
+            <option value="graphics">Graphics</option>
+            <option value="vehicles">Vehicles</option>
+            <option value="service">Service</option>
+            <option value="offScreen">Off-Screen</option>
+            <option value="construction">Construction</option>
+        </select><br>
+
+        <label for="subLevelOneInput" class="infoLabel">Sublevel -1</label>
+        <input type="text" id="subLevelOneInput" value="Dokumente" required><br>
+
+        <label for="subLevelTwoInput" class="infoLabel" required>Sublevel -2</label>
+        <input type="text" id="subLevelTwoInput" class="infoInput" required><br>
+
+        <label for="epocheInput" class="infoLabel">Enter Epoche</label>
+        <input type="text" id="epocheInput" value="ab 2010" class="infoInput" required><br>
+        
+        <label for="availabilityInput" class="infoLabel">Enter Availability</label>
+        <input type="text" id="availabilityInput" value="in gedruckter Form" class="infoInput" required><br>
+
+        <label for="formatInput" class="infoLabel">Enter Format</label>
+        <input type="text" id="formatInput" value="Pixelgrafik" class="infoInput" required><br>
+
+        <label for="rightsInput" class="infoLabel">Enter rights</label>
+        <input type="text" id="rightsInput" value="Rechte liegen beim Grafiker" class="infoInput" required><br>
+
+        <label for="brandInput" class="infoLabel">Enter Brand of Vehicle</label>
+        <input type="text" id="brandInput" value="" class="infoInput" required><br>
+
+        <label for="urlInput" class="infoLabel">Enter URL:</label>
+        <input type="text" id="urlInput" class="urlInput" required><br>
+
         <label for="result">Result</label>
-        <input type="text" id="result" name="result" value="No result" readonly>
+        <input type="text" id="result" name="result" value="No result" readonly><br>
+
         <button type="submit">Submit</button>
     </form>
 
     <script>
+
+        // Show and hide Inputs according to dropdown
+        const mainCategorySelect = document.getElementById('mainCategorySelect');
+        const subLevelTwoInput = document.getElementById('subLevelTwoInput');
+        const epocheInput = document.getElementById('epocheInput');
+        const availabilityInput = document.getElementById('availabilityInput');
+        const formatInput = document.getElementById('formatInput');
+        const rightsInput = document.getElementById('rightsInput');
+        const brandInput = document.getElementById('brandInput');
+
+        mainCategorySelect.addEventListener('change', function() {
+            const selectedValue = mainCategorySelect.value;
+            if (selectedValue === 'furniture' || selectedValue === 'props' || selectedValue === 'construction') {
+              subLevelTwoInput.style.display= 'inline';
+              subLevelTwoInput.required = true;
+              epocheInput.style.display = 'inline';
+              availabilityInput.style.display= 'none';
+              formatInput.style.display= 'none';
+              rightsInput.style.display= 'none';
+              brandInput.style.display = 'none';
+              brandInput.required = false;
+            }
+            if (selectedValue === 'graphics') {
+              subLevelTwoInput.style.display= 'none';
+              subLevelTwoInput.required = false;
+              epocheInput.style.display = 'inline';
+              availabilityInput.style.display= 'inline';
+              formatInput.style.display= 'inline';
+              rightsInput.style.display= 'inline';
+              brandInput.style.display = 'none';
+              brandInput.required = false;
+            }
+            if (selectedValue === 'vehicles') {
+              subLevelTwoInput.style.display= 'inline';
+              subLevelTwoInput.required = true;
+              epocheInput.style.display = 'inline';
+              availabilityInput.style.display= 'none';
+              formatInput.style.display= 'none';
+              rightsInput.style.display= 'none';
+              brandInput.style.display = 'inline';
+              brandInput.required = true;
+            }
+            if (selectedValue === 'service') {
+              subLevelTwoInput.style.display= 'none';
+              subLevelTwoInput.required = false;
+              epocheInput.style.display = 'none';
+              availabilityInput.style.display= 'none';
+              formatInput.style.display= 'none';
+              rightsInput.style.display= 'none';
+              brandInput.style.display = 'none';
+              brandInput.required = false;
+            }
+            if (selectedValue === 'offScreen') {
+              subLevelTwoInput.style.display= 'none';
+              subLevelTwoInput.required = false;
+              epocheInput.style.display = 'none';
+              availabilityInput.style.display= 'none';
+              formatInput.style.display= 'none';
+              rightsInput.style.display= 'none';
+              brandInput.style.display = 'none';
+              brandInput.required = false;
+            };
+            
+            
+        } );
+
         document.getElementById('urlForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
             const urlInput = document.getElementById('urlInput');
             const url = urlInput.value;
-
-            const epocheInput = document.getElementById('epocheInput');
+            const subLevelOne = subLevelOneInput.value;
+            const mainCategory =mainCategorySelect.value;
             const epoche = epocheInput.value;
+            const subLevelTwo = subLevelTwoInput.value;
+            const availability = availabilityInput.value;
+            const format = formatInput.value;
+            const rights = rightsInput.value;
+            const brand = brandInput.value;
 
-            const categoryInput = document.getElementById('categoryInput');
-            const category = categoryInput.value;
-            
             urlInput.value = '';
             document.getElementById('result').value='';
             
@@ -39,7 +137,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url: url, epoche: epoche, category: category}),
+                    body: JSON.stringify({ url: url, mainCategory: mainCategory, epoche: epoche, subLevelOne: subLevelOne, subLevelTwo: subLevelTwo, availability: availability, format: format, rights: rights, brand: brand}),
                 })
                 .then(response => response.text())
                 .then(message => document.getElementById('result').value=message)
